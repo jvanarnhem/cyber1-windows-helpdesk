@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>HelpdeskSim</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 0; background: #f6f7fb; }
+    header { padding: 16px 20px; background: white; border-bottom: 1px solid #e5e7eb; }
+    main { max-width: 900px; margin: 18px auto; padding: 0 14px 40px; }
+    .card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin: 12px 0; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    label { display:block; font-size: 13px; color: #374151; margin-bottom: 6px; }
+    input, select, textarea { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 14px; background: white; }
+    textarea { min-height: 84px; resize: vertical; }
+    .pill { display:inline-block; padding: 4px 10px; border-radius: 999px; background:#eef2ff; color:#3730a3; font-size: 12px; margin-right: 8px; }
+    .btn { background:#111827; color:white; border:0; border-radius: 10px; padding: 10px 14px; cursor:pointer; font-weight: 600; }
+    .btn.secondary { background:#374151; }
+    .btn:disabled { opacity:.6; cursor:not-allowed; }
+    .actions { display:flex; gap:10px; flex-wrap: wrap; }
+    .small { color:#6b7280; font-size: 12px; }
+    .error { color:#b91c1c; font-weight:600; }
+    .success { color:#047857; font-weight:600; }
+    .checklist { columns: 2; column-gap: 18px; }
+    .checklist label { display:flex; gap:8px; align-items:flex-start; margin: 6px 0; font-size: 14px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    @media (max-width: 720px) { .row { grid-template-columns: 1fr; } .checklist { columns:1; } }
+  </style>
+</head>
+<body>
+<header>
+  <div class="mono" style="font-weight:800;">HelpdeskSim</div>
+  <div class="small">Tier 1 helpdesk practice — safe steps, good questions, clean documentation.</div>
+</header>
+
+<main>
+  <div class="card" id="setupCard">
+    <h2 style="margin:0 0 10px;">Start</h2>
+    <div class="row">
+      <div>
+        <label>Class passcode (from your teacher)</label>
+        <input id="passcode" placeholder="e.g., CYBER-0305" />
+        <div class="small">This prevents random submissions from outside class.</div>
+      </div>
+      <div>
+        <label>Student code (no names)</label>
+        <input id="studentCode" placeholder="e.g., AJ42 or Period2-17" />
+        <div class="small">Use something your teacher can interpret later, but not your name.</div>
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>Class period (optional)</label>
+        <input id="classPeriod" placeholder="e.g., 3" />
+      </div>
+      <div>
+        <label>Ticket round</label>
+        <select id="ticketRound">
+          <option value="1">Ticket 1</option>
+          <option value="2">Ticket 2</option>
+        </select>
+      </div>
+    </div>
+    <div class="actions" style="margin-top:10px;">
+      <button class="btn" id="loadBtn">Load ticket</button>
+      <span class="small" id="setupMsg"></span>
+    </div>
+  </div>
+
+  <div class="card" id="ticketCard" style="display:none;">
+    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <div>
+        <span class="pill" id="topicPill"></span>
+        <span class="pill" id="roundPill"></span>
+      </div>
+      <div class="small mono" id="scenarioId"></div>
+    </div>
+
+    <h2 style="margin:10px 0 6px;" id="title"></h2>
+
+    <div class="card" style="background:#fafafa;">
+      <div><strong>Customer report</strong></div>
+      <div id="prompt" style="margin-top:6px;"></div>
+      <div style="margin-top:10px;"><strong>Context</strong></div>
+      <div class="small" id="context"></div>
+      <div style="margin-top:10px;"><strong>Error / message</strong></div>
+      <div class="mono" id="errorText" style="margin-top:6px;"></div>
+    </div>
+
+    <h3 style="margin:12px 0 6px;">Fill out the ticket</h3>
+
+    <div class="row">
+      <div>
+        <label>Category</label>
+        <select id="category">
+          <option>Windows Update</option>
+          <option>Firmware</option>
+          <option>Software Install/Remove</option>
+          <option>Imaging/Deployment</option>
+          <option>Account/Permissions</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div>
+        <label>Severity</label>
+        <select id="severity">
+          <option>Low</option>
+          <option>Medium</option>
+          <option>High</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Clarifying question #1</label>
+        <input id="q1" placeholder="What is the first thing you need to know?" />
+      </div>
+      <div>
+        <label>Clarifying question #2</label>
+        <input id="q2" placeholder="What else matters for diagnosis?" />
+      </div>
+    </div>
+    <div>
+      <label>Clarifying question #3</label>
+      <input id="q3" placeholder="What would change your next steps?" />
+    </div>
+
+    <div style="margin-top:10px;">
+      <label>Safe actions you would try first (choose a few)</label>
+      <div class="checklist" id="actionsBox"></div>
+      <div class="small">Pick actions that are safe and reversible. Avoid “download random tools.”</div>
+    </div>
+
+    <div class="row" style="margin-top:10px;">
+      <div>
+        <label>Decision</label>
+        <select id="decision">
+          <option>Resolved (Tier 1)</option>
+          <option>Needs more info</option>
+          <option>Escalate to Tier 2 / IT</option>
+        </select>
+      </div>
+      <div>
+        <label>Confidence (1–5)</label>
+        <select id="confidence">
+          <option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="margin-top:10px;">
+      <label>Customer-facing response (2–6 sentences)</label>
+      <textarea id="customerMsg" placeholder="Write a calm, professional message. Include what you’ll do next and what you need from them."></textarea>
+    </div>
+
+    <div class="actions" style="margin-top:12px;">
+      <button class="btn" id="submitBtn">Submit ticket</button>
+      <button class="btn secondary" id="backBtn">Back</button>
+      <span id="statusMsg"></span>
+    </div>
+
+    <div class="small" style="margin-top:10px;">
+      Tip: Your goal is safe triage + evidence collection + clear escalation when needed.
+    </div>
+  </div>
+</main>
+
+<script>
+  // 1) Paste your Apps Script Web App URL here:
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw0qDsExExnwpmauRw-i41KbHrSqgaGkFedgy4RFfBXfiK_xbKtPNtB7ZKInaKxh94a/exec?passcode=YOURPASSCODE&ticket_round=1";
+
+  const ACTION_SETS = {
+    "Windows Update": [
+      "Ask for exact error code + screenshot",
+      "Check free disk space (Storage settings)",
+      "Plug in AC power (if laptop)",
+      "Reboot once",
+      "Run Windows Update troubleshooter",
+      "Clear large files / empty Recycle Bin",
+      "Pause and retry update later (maintenance window)",
+      "Check date/time is correct",
+      "Escalate if repeated failures / policy blocks update"
+    ],
+    "Firmware": [
+      "Identify device model + vendor (msinfo32)",
+      "Record current BIOS/UEFI version",
+      "Confirm AC power connected",
+      "Check official vendor support page only",
+      "Verify IT policy / maintenance window required",
+      "Warn about risk (wrong update can brick device)",
+      "Do NOT use third-party BIOS tools",
+      "Escalate to IT / Tier 2 for approval"
+    ]
+  };
+
+  const el = (id) => document.getElementById(id);
+
+  let currentScenario = null;
+
+  function setMsg(target, msg, cls="") {
+    target.className = cls;
+    target.textContent = msg;
+  }
+
+  function buildActions(topic) {
+    const box = el("actionsBox");
+    box.innerHTML = "";
+    const actions = ACTION_SETS[topic] || ACTION_SETS["Windows Update"];
+    actions.forEach((a, i) => {
+      const id = `act_${i}`;
+      const wrap = document.createElement("label");
+      wrap.innerHTML = `<input type="checkbox" id="${id}" value="${a}"> <span>${a}</span>`;
+      box.appendChild(wrap);
+    });
+  }
+
+  async function loadTicket() {
+    const passcode = el("passcode").value.trim();
+    const ticketRound = el("ticketRound").value.trim();
+
+    if (!passcode) {
+      setMsg(el("setupMsg"), "Enter the class passcode.", "error");
+      return;
+    }
+
+    setMsg(el("setupMsg"), "Loading...", "");
+    const url = `${SCRIPT_URL}?passcode=${encodeURIComponent(passcode)}&ticket_round=${encodeURIComponent(ticketRound)}`;
+
+    try {
+      const res = await fetch(url, { method: "GET" });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "Failed to load");
+
+      currentScenario = data.scenario;
+
+      // Show ticket UI
+      el("setupCard").style.display = "none";
+      el("ticketCard").style.display = "block";
+
+      el("topicPill").textContent = currentScenario.topic;
+      el("roundPill").textContent = `Round ${ticketRound}`;
+      el("scenarioId").textContent = `Scenario: ${currentScenario.scenario_id}`;
+      el("title").textContent = currentScenario.title;
+      el("prompt").textContent = currentScenario.prompt;
+      el("context").textContent = `${currentScenario.user_role} • ${currentScenario.device_context}`;
+      el("errorText").textContent = currentScenario.error_text || "(none)";
+
+      el("category").value = currentScenario.topic; // preselect if matches
+      buildActions(currentScenario.topic);
+
+      setMsg(el("statusMsg"), "", "");
+    } catch (err) {
+      setMsg(el("setupMsg"), `Error: ${err.message}`, "error");
+    }
+  }
+
+  function selectedActions() {
+    const inputs = el("actionsBox").querySelectorAll("input[type=checkbox]");
+    return Array.from(inputs).filter(x => x.checked).map(x => x.value);
+  }
+
+  async function submitTicket() {
+    const passcode = el("passcode").value.trim();
+    const student_code = el("studentCode").value.trim();
+    const class_period = el("classPeriod").value.trim();
+    const ticket_round = el("ticketRound").value.trim();
+
+    if (!passcode) { setMsg(el("statusMsg"), "Missing passcode.", "error"); return; }
+    if (!currentScenario) { setMsg(el("statusMsg"), "No scenario loaded.", "error"); return; }
+
+    el("submitBtn").disabled = true;
+    setMsg(el("statusMsg"), "Submitting...", "");
+
+    const payload = {
+      passcode,
+      student_code,
+      class_period,
+      ticket_round,
+      scenario_id: currentScenario.scenario_id,
+      category: el("category").value,
+      severity: el("severity").value,
+      clarifying_q1: el("q1").value,
+      clarifying_q2: el("q2").value,
+      clarifying_q3: el("q3").value,
+      actions_selected: selectedActions(),
+      decision: el("decision").value,
+      customer_message: el("customerMsg").value,
+      confidence: el("confidence").value,
+      user_agent: navigator.userAgent
+    };
+
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || "Submit failed");
+
+      setMsg(el("statusMsg"), "Submitted ✅ You may now load the next ticket round.", "success");
+    } catch (err) {
+      setMsg(el("statusMsg"), `Error: ${err.message}`, "error");
+    } finally {
+      el("submitBtn").disabled = false;
+    }
+  }
+
+  function goBack() {
+    el("ticketCard").style.display = "none";
+    el("setupCard").style.display = "block";
+    setMsg(el("setupMsg"), "", "");
+  }
+
+  el("loadBtn").addEventListener("click", loadTicket);
+  el("submitBtn").addEventListener("click", submitTicket);
+  el("backBtn").addEventListener("click", goBack);
+</script>
+</body>
+</html>
