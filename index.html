@@ -5,26 +5,54 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>HelpdeskSim</title>
   <style>
-    body { font-family: system-ui, Arial, sans-serif; margin: 0; background: #f6f7fb; }
-    header { padding: 16px 20px; background: white; border-bottom: 1px solid #e5e7eb; }
-    main { max-width: 900px; margin: 18px auto; padding: 0 14px 40px; }
-    .card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin: 12px 0; }
-    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    label { display:block; font-size: 13px; color: #374151; margin-bottom: 6px; }
-    input, select, textarea { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 14px; background: white; }
-    textarea { min-height: 84px; resize: vertical; }
+    :root { --border:#e5e7eb; --muted:#6b7280; --bg:#f6f7fb; --text:#111827; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, Arial, sans-serif; margin: 0; background: var(--bg); color: var(--text); }
+
+    header { padding: 16px 20px; background: white; border-bottom: 1px solid var(--border); }
+    main { max-width: 920px; margin: 18px auto; padding: 0 14px 40px; }
+
+    .card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin: 12px 0; }
+    h2, h3 { margin: 0 0 10px; }
+    h3 { margin-top: 10px; }
+
+    .small { color: var(--muted); font-size: 12px; line-height: 1.3; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
     .pill { display:inline-block; padding: 4px 10px; border-radius: 999px; background:#eef2ff; color:#3730a3; font-size: 12px; margin-right: 8px; }
+
+    /* Form layout: flex that wraps cleanly (Chromebook-friendly) */
+    .form-row { display:flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+    .field { flex: 1 1 260px; min-width: 240px; }
+    .field.full { flex: 1 1 100%; min-width: 240px; }
+
+    label { display:block; font-size: 13px; color:#374151; margin-bottom: 6px; }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 14px;
+      background: white;
+    }
+    textarea { min-height: 92px; resize: vertical; }
+
     .btn { background:#111827; color:white; border:0; border-radius: 10px; padding: 10px 14px; cursor:pointer; font-weight: 600; }
     .btn.secondary { background:#374151; }
     .btn:disabled { opacity:.6; cursor:not-allowed; }
-    .actions { display:flex; gap:10px; flex-wrap: wrap; }
-    .small { color:#6b7280; font-size: 12px; }
+
+    .actions { display:flex; gap: 10px; flex-wrap: wrap; align-items:center; margin-top: 12px; }
     .error { color:#b91c1c; font-weight:600; }
     .success { color:#047857; font-weight:600; }
-    .checklist { columns: 2; column-gap: 18px; }
-    .checklist label { display:flex; gap:8px; align-items:flex-start; margin: 6px 0; font-size: 14px; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-    @media (max-width: 720px) { .row { grid-template-columns: 1fr; } .checklist { columns:1; } }
+
+    /* Checklist: avoid CSS columns (can render oddly); use grid */
+    .checklist { display:grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; margin-top: 6px; }
+    .checklist-item { display:flex; gap: 8px; align-items:flex-start; font-size: 14px; }
+    .checklist-item input { width: auto; margin-top: 3px; }
+
+    @media (max-width: 720px) {
+      .checklist { grid-template-columns: 1fr; }
+      header { padding: 14px 14px; }
+    }
   </style>
 </head>
 <body>
@@ -35,25 +63,29 @@
 
 <main>
   <div class="card" id="setupCard">
-    <h2 style="margin:0 0 10px;">Start</h2>
-    <div class="row">
-      <div>
+    <h2>Start</h2>
+
+    <div class="form-row">
+      <div class="field">
         <label>Class passcode (from your teacher)</label>
-        <input id="passcode" placeholder="e.g., CYBER-0305" />
+        <input id="passcode" placeholder="e.g., firmware" />
         <div class="small">This prevents random submissions from outside class.</div>
       </div>
-      <div>
-        <label>Student code (no names)</label>
-        <input id="studentCode" placeholder="e.g., AJ42 or Period2-17" />
-        <div class="small">Use something your teacher can interpret later, but not your name.</div>
+
+      <div class="field">
+        <label>Help Desk ID (10–38)</label>
+        <input id="studentCode" placeholder="e.g., 10" inputmode="numeric" />
+        <div class="small">Enter your assigned two-digit number only. No names.</div>
       </div>
     </div>
-    <div class="row">
-      <div>
+
+    <div class="form-row">
+      <div class="field">
         <label>Class period (optional)</label>
         <input id="classPeriod" placeholder="e.g., 3" />
       </div>
-      <div>
+
+      <div class="field">
         <label>Ticket round</label>
         <select id="ticketRound">
           <option value="1">Ticket 1</option>
@@ -61,14 +93,15 @@
         </select>
       </div>
     </div>
-    <div class="actions" style="margin-top:10px;">
+
+    <div class="actions">
       <button class="btn" id="loadBtn">Load ticket</button>
       <span class="small" id="setupMsg"></span>
     </div>
   </div>
 
   <div class="card" id="ticketCard" style="display:none;">
-    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;">
       <div>
         <span class="pill" id="topicPill"></span>
         <span class="pill" id="roundPill"></span>
@@ -76,21 +109,23 @@
       <div class="small mono" id="scenarioId"></div>
     </div>
 
-    <h2 style="margin:10px 0 6px;" id="title"></h2>
+    <h2 style="margin-top:10px;" id="title"></h2>
 
     <div class="card" style="background:#fafafa;">
       <div><strong>Customer report</strong></div>
       <div id="prompt" style="margin-top:6px;"></div>
+
       <div style="margin-top:10px;"><strong>Context</strong></div>
       <div class="small" id="context"></div>
+
       <div style="margin-top:10px;"><strong>Error / message</strong></div>
-      <div class="mono" id="errorText" style="margin-top:6px;"></div>
+      <div class="mono" id="errorText" style="margin-top:6px; white-space:pre-wrap;"></div>
     </div>
 
-    <h3 style="margin:12px 0 6px;">Fill out the ticket</h3>
+    <h3>Fill out the ticket</h3>
 
-    <div class="row">
-      <div>
+    <div class="form-row">
+      <div class="field">
         <label>Category</label>
         <select id="category">
           <option>Windows Update</option>
@@ -101,7 +136,8 @@
           <option>Other</option>
         </select>
       </div>
-      <div>
+
+      <div class="field">
         <label>Severity</label>
         <select id="severity">
           <option>Low</option>
@@ -111,29 +147,34 @@
       </div>
     </div>
 
-    <div class="row">
-      <div>
+    <div class="form-row">
+      <div class="field">
         <label>Clarifying question #1</label>
         <input id="q1" placeholder="What is the first thing you need to know?" />
       </div>
-      <div>
+      <div class="field">
         <label>Clarifying question #2</label>
         <input id="q2" placeholder="What else matters for diagnosis?" />
       </div>
     </div>
-    <div>
-      <label>Clarifying question #3</label>
-      <input id="q3" placeholder="What would change your next steps?" />
+
+    <div class="form-row">
+      <div class="field full">
+        <label>Clarifying question #3</label>
+        <input id="q3" placeholder="What would change your next steps?" />
+      </div>
     </div>
 
-    <div style="margin-top:10px;">
-      <label>Safe actions you would try first (choose a few)</label>
-      <div class="checklist" id="actionsBox"></div>
-      <div class="small">Pick actions that are safe and reversible. Avoid “download random tools.”</div>
+    <div class="form-row">
+      <div class="field full">
+        <label>Safe actions you would try first (choose a few)</label>
+        <div class="checklist" id="actionsBox"></div>
+        <div class="small">Pick actions that are safe and reversible. Avoid “download random tools.”</div>
+      </div>
     </div>
 
-    <div class="row" style="margin-top:10px;">
-      <div>
+    <div class="form-row">
+      <div class="field">
         <label>Decision</label>
         <select id="decision">
           <option>Resolved (Tier 1)</option>
@@ -141,7 +182,8 @@
           <option>Escalate to Tier 2 / IT</option>
         </select>
       </div>
-      <div>
+
+      <div class="field">
         <label>Confidence (1–5)</label>
         <select id="confidence">
           <option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option>
@@ -149,12 +191,14 @@
       </div>
     </div>
 
-    <div style="margin-top:10px;">
-      <label>Customer-facing response (2–6 sentences)</label>
-      <textarea id="customerMsg" placeholder="Write a calm, professional message. Include what you’ll do next and what you need from them."></textarea>
+    <div class="form-row">
+      <div class="field full">
+        <label>Customer-facing response (2–6 sentences)</label>
+        <textarea id="customerMsg" placeholder="Write a calm, professional message. Include what you’ll do next and what you need from them."></textarea>
+      </div>
     </div>
 
-    <div class="actions" style="margin-top:12px;">
+    <div class="actions">
       <button class="btn" id="submitBtn">Submit ticket</button>
       <button class="btn secondary" id="backBtn">Back</button>
       <span id="statusMsg"></span>
@@ -167,7 +211,7 @@
 </main>
 
 <script>
-  // 1) Paste your Apps Script Web App URL here:
+  // Use ONLY the base /exec URL (no query parameters).
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw0qDsExExnwpmauRw-i41KbHrSqgaGkFedgy4RFfBXfiK_xbKtPNtB7ZKInaKxh94a/exec";
 
   const ACTION_SETS = {
@@ -195,12 +239,23 @@
   };
 
   const el = (id) => document.getElementById(id);
-
   let currentScenario = null;
 
   function setMsg(target, msg, cls="") {
     target.className = cls;
     target.textContent = msg;
+  }
+
+  function validateStudentId_() {
+    const raw = el("studentCode").value.trim();
+    const idNum = Number(raw);
+
+    if (!raw) return { ok: false, msg: "Enter your Help Desk ID (10–38)." };
+    if (!Number.isInteger(idNum)) return { ok: false, msg: "Help Desk ID must be a whole number (10–38)." };
+    if (idNum < 10 || idNum > 38) return { ok: false, msg: "Help Desk ID must be between 10 and 38." };
+
+    el("studentCode").value = String(idNum);
+    return { ok: true };
   }
 
   function buildActions(topic) {
@@ -209,8 +264,9 @@
     const actions = ACTION_SETS[topic] || ACTION_SETS["Windows Update"];
     actions.forEach((a, i) => {
       const id = `act_${i}`;
-      const wrap = document.createElement("label");
-      wrap.innerHTML = `<input type="checkbox" id="${id}" value="${a}"> <span>${a}</span>`;
+      const wrap = document.createElement("div");
+      wrap.className = "checklist-item";
+      wrap.innerHTML = `<input type="checkbox" id="${id}" value="${a}"><label for="${id}" style="margin:0;">${a}</label>`;
       box.appendChild(wrap);
     });
   }
@@ -219,12 +275,13 @@
     const passcode = el("passcode").value.trim();
     const ticketRound = el("ticketRound").value.trim();
 
-    if (!passcode) {
-      setMsg(el("setupMsg"), "Enter the class passcode.", "error");
-      return;
-    }
+    if (!passcode) { setMsg(el("setupMsg"), "Enter the class passcode.", "error"); return; }
+
+    const idCheck = validateStudentId_();
+    if (!idCheck.ok) { setMsg(el("setupMsg"), idCheck.msg, "error"); return; }
 
     setMsg(el("setupMsg"), "Loading...", "");
+
     const url = `${SCRIPT_URL}?passcode=${encodeURIComponent(passcode)}&ticket_round=${encodeURIComponent(ticketRound)}`;
 
     try {
@@ -234,7 +291,6 @@
 
       currentScenario = data.scenario;
 
-      // Show ticket UI
       el("setupCard").style.display = "none";
       el("ticketCard").style.display = "block";
 
@@ -246,7 +302,7 @@
       el("context").textContent = `${currentScenario.user_role} • ${currentScenario.device_context}`;
       el("errorText").textContent = currentScenario.error_text || "(none)";
 
-      el("category").value = currentScenario.topic; // preselect if matches
+      el("category").value = currentScenario.topic;
       buildActions(currentScenario.topic);
 
       setMsg(el("statusMsg"), "", "");
@@ -267,6 +323,10 @@
     const ticket_round = el("ticketRound").value.trim();
 
     if (!passcode) { setMsg(el("statusMsg"), "Missing passcode.", "error"); return; }
+
+    const idCheck = validateStudentId_();
+    if (!idCheck.ok) { setMsg(el("statusMsg"), idCheck.msg, "error"); return; }
+
     if (!currentScenario) { setMsg(el("statusMsg"), "No scenario loaded.", "error"); return; }
 
     el("submitBtn").disabled = true;
