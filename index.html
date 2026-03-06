@@ -79,7 +79,8 @@
         <label>Ticket round</label>
         <select id="ticketRound">
           <option value="1">Ticket 1 (Windows Update)</option>
-          <option value="2">Ticket 2 (Firmware/Software)</option>
+          <option value="2">Ticket 2 (Firmware/Permissions)</option>
+          <option value="3">Ticket 3 (Software Install)</option>
         </select>
       </div>
     </div>
@@ -212,6 +213,9 @@
     ],
     "Firmware": [
       "Identify device model (msinfo32)", "Record current BIOS/UEFI version", "Confirm AC power connected", "Verify IT policy / maintenance window", "Escalate to IT / Tier 2 for approval"
+    ],
+    "Software Install": [
+      "Verify the download source/URL", "Ask if UAC prompt appeared", "Instruct user to delete suspicious file", "Run Quick Scan in Windows Security", "Check if software is approved by IT", "Escalate if malware was executed"
     ]
   };
 
